@@ -123,6 +123,7 @@ object Kleisli
     extends KleisliInstances
     with KleisliFunctions
     with KleisliFunctionsBinCompat
+    with KleisliFunctionsBinCompat1
     with KleisliExplicitInstances {
 
   /**
@@ -269,6 +270,22 @@ sealed private[data] trait KleisliFunctionsBinCompat {
    * */
   def liftFunctionK[F[_], G[_], A](f: F ~> G): Kleisli[F, A, ?] ~> Kleisli[G, A, ?] =
     λ[Kleisli[F, A, ?] ~> Kleisli[G, A, ?]](_.mapK(f))
+}
+
+sealed private[data] trait KleisliFunctionsBinCompat1 {
+
+  /**
+   * Same as [[Kleisli#run]], but expressed as a FunctionK for use with mapK
+   * {{{
+   * scala> import cats._, data._, implicits._
+   * scala> val a: OptionT[Kleisli[String, List[Char], ?], Int] = OptionT(Kleisli(_.toList))
+   * scala> val b: OptionT[Eval[Int]] = a.mapK(Kleisli.runK("hi"))
+   * scala> b.value
+   * res0: Option[Int] = Some(List('h', 'i'))
+   * }}}
+   */
+  def runK[F[_], A](a: A): Kleisli[F, A, ?] ~> F =
+    λ[Kleisli[F, A, ?] ~> F](_.run(a))
 }
 
 sealed private[data] trait KleisliExplicitInstances {
